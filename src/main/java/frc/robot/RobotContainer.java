@@ -5,10 +5,12 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.subsystems.ExampleSubsystem;
+import frc.lib.util.JoystickSupplier;
+import frc.robot.commands.TeleopSwerve;
+import frc.robot.commands.TeleopSwerve.RotationStyle;
+import frc.robot.subsystems.swerve.Swerve;
+import tigerlib.input.controller.XboxController;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -17,15 +19,36 @@ import frc.robot.subsystems.ExampleSubsystem;
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-    // The robot's subsystems and commands are defined here...
-    private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
 
-    private final ExampleCommand m_autoCommand = new ExampleCommand(m_exampleSubsystem);
+    // Controllers
+    private final XboxController driver = new XboxController(0);
+
+    // Subsystems
+    Swerve s_Swerve = new Swerve();
 
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         // Configure the button bindings
         configureButtonBindings();
+
+        boolean fieldRelative = true;
+        boolean openLoop = true;
+        RotationStyle rotationStyle = RotationStyle.ROTATE;
+        // left joystick is translation, right joystick is rotation
+        JoystickSupplier translationNorth = () -> driver.leftY().getVal();
+        JoystickSupplier translationEast = () -> driver.leftX().getVal();
+        JoystickSupplier rotationNorth = () -> driver.rightY().getVal();
+        JoystickSupplier rotationEast = () -> driver.rightX().getVal();
+        s_Swerve.setDefaultCommand(
+                new TeleopSwerve(
+                        s_Swerve,
+                        fieldRelative,
+                        openLoop,
+                        rotationStyle,
+                        translationNorth,
+                        translationEast,
+                        rotationNorth,
+                        rotationEast));
     }
 
     /**
@@ -43,6 +66,6 @@ public class RobotContainer {
      */
     public Command getAutonomousCommand() {
         // An ExampleCommand will run in autonomous
-        return m_autoCommand;
+        return null;
     }
 }
