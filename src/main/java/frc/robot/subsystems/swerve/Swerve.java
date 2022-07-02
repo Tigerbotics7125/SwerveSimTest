@@ -6,7 +6,6 @@ package frc.robot.subsystems.swerve;
 
 import com.ctre.phoenix.sensors.BasePigeonSimCollection;
 import com.ctre.phoenix.sensors.WPI_PigeonIMU;
-
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
@@ -69,12 +68,11 @@ public class Swerve extends SubsystemBase {
 
         // set module states
         SwerveDriveKinematics.desaturateWheelSpeeds(desiredModStates, Constants.Swerve.maxSpeed);
-        
+
         for (SwerveModule mod : swerveMods) {
             mod.setDesiredState(desiredModStates[mod.moduleNumber], isOpenLoop);
         }
     }
-
 
     public Pose2d getPose() {
         return poseEstimator.getEstimatedPosition();
@@ -85,12 +83,13 @@ public class Swerve extends SubsystemBase {
 
         double wheelBase = Constants.Swerve.wheelBase;
         double trackWidth = Constants.Swerve.trackWidth;
-        var translations = new Translation2d[] {
-            new Translation2d(wheelBase / 2.0, trackWidth / 2.0),
-                        new Translation2d(wheelBase / 2.0, -trackWidth / 2.0),
-                        new Translation2d(-wheelBase / 2.0, trackWidth / 2.0),
-                        new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0)
-        };
+        var translations =
+                new Translation2d[] {
+                    new Translation2d(wheelBase / 2.0, trackWidth / 2.0),
+                    new Translation2d(wheelBase / 2.0, -trackWidth / 2.0),
+                    new Translation2d(-wheelBase / 2.0, trackWidth / 2.0),
+                    new Translation2d(-wheelBase / 2.0, -trackWidth / 2.0)
+                };
 
         for (SwerveModule mod : swerveMods) {
             poses[mod.moduleNumber] = mod.getPose(this.getPose(), translations[mod.moduleNumber]);

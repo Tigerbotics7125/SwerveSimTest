@@ -6,9 +6,9 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.lib.util.JoystickSupplier;
 import frc.robot.Constants;
 import frc.robot.subsystems.swerve.Swerve;
+import io.github.tigerbotics7125.tigerlib.util.CleanSupplier;
 
 public class TeleopSwerve extends CommandBase {
 
@@ -21,10 +21,10 @@ public class TeleopSwerve extends CommandBase {
     private boolean fieldRelative;
     private RotationStyle rotationStyle;
     private boolean openLoop;
-    private JoystickSupplier translationNorth;
-    private JoystickSupplier translationEast;
-    private JoystickSupplier rotationNorth;
-    private JoystickSupplier rotationEast;
+    private CleanSupplier<Double> translationNorth;
+    private CleanSupplier<Double> translationEast;
+    private CleanSupplier<Double> rotationNorth;
+    private CleanSupplier<Double> rotationEast;
 
     /**
      * @param s_Swerve Swerver subsystem
@@ -44,10 +44,10 @@ public class TeleopSwerve extends CommandBase {
             boolean fieldRelative,
             boolean openLoop,
             RotationStyle rotationStyle,
-            JoystickSupplier translationNorth,
-            JoystickSupplier translationEast,
-            JoystickSupplier headingNorth,
-            JoystickSupplier headingEast) {
+            CleanSupplier<Double> translationNorth,
+            CleanSupplier<Double> translationEast,
+            CleanSupplier<Double> headingNorth,
+            CleanSupplier<Double> headingEast) {
         this.s_Swerve = s_Swerve;
         addRequirements(this.s_Swerve);
         this.fieldRelative = fieldRelative;
@@ -63,22 +63,21 @@ public class TeleopSwerve extends CommandBase {
     public void execute() {
         // Robot x axis is forwards, so robot north is x axis.
         Translation2d translation =
-                new Translation2d(-translationNorth.getClean(), translationEast.getClean())
+                new Translation2d(-translationNorth.get(), translationEast.get())
                         .times(Constants.Swerve.maxSpeed);
 
         double rotation = 0;
         switch (rotationStyle) {
             case ROTATE:
                 {
-                    rotation = rotationEast.getClean() * Constants.Swerve.maxAngularVelocity;
+                    rotation = rotationEast.get() * Constants.Swerve.maxAngularVelocity;
                     break;
                 }
             case POINT:
                 {
-                    double desiredAngle =
-                            Math.atan2(rotationEast.getClean(), rotationNorth.getClean());
+                    double desiredAngle = Math.atan2(rotationEast.get(), rotationNorth.get());
                     // PID is backwards, idk why
-                    rotation = 
+                    rotation =
                             Constants.Swerve.headingPID.calculate(
                                     s_Swerve.getYaw().getRadians(), desiredAngle);
                     break;

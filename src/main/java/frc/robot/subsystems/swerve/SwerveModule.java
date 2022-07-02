@@ -18,7 +18,6 @@ import com.ctre.phoenix.motorcontrol.TalonFXSimCollection;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonFX;
 import com.ctre.phoenix.sensors.CANCoderStatusFrame;
 import com.ctre.phoenix.sensors.WPI_CANCoder;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -77,14 +76,16 @@ public class SwerveModule extends SubsystemBase {
         sim_angleMotorSim = angleMotor.getSimCollection();
         sim_driveMotorSim = driveMotor.getSimCollection();
 
-        sim_angleModModel = new FlywheelSim(
-                LinearSystemId.identifyVelocitySystem(0.30, 0.1),
-                DCMotor.getFalcon500(1),
-                angleGearRatio);
-        sim_driveModModel = new FlywheelSim(
-                LinearSystemId.identifyVelocitySystem(.1, .3),
-                DCMotor.getFalcon500(1),
-                driveGearRatio);
+        sim_angleModModel =
+                new FlywheelSim(
+                        LinearSystemId.identifyVelocitySystem(0.30, 0.1),
+                        DCMotor.getFalcon500(1),
+                        angleGearRatio);
+        sim_driveModModel =
+                new FlywheelSim(
+                        LinearSystemId.identifyVelocitySystem(.1, .5),
+                        DCMotor.getFalcon500(1),
+                        driveGearRatio);
     }
 
     public void setDesiredState(SwerveModuleState desiredState, boolean isOpenLoop) {
@@ -96,29 +97,30 @@ public class SwerveModule extends SubsystemBase {
             double percentOutput = desiredState.speedMetersPerSecond / maxSpeed;
             driveMotor.set(ControlMode.PercentOutput, percentOutput);
         } else {
-            double velocity = Conversions.MPSToFalcon(
-                    desiredState.speedMetersPerSecond, wheelCircumference, driveGearRatio);
-            driveMotor.set(
-                    ControlMode.Velocity,
-                    velocity);
-                    /*
-                    DemandType.ArbitraryFeedForward,
-                    feedforward.calculate(desiredState.speedMetersPerSecond));
-                    */
-                }
+            double velocity =
+                    Conversions.MPSToFalcon(
+                            desiredState.speedMetersPerSecond, wheelCircumference, driveGearRatio);
+            driveMotor.set(ControlMode.Velocity, velocity);
+            /*
+            DemandType.ArbitraryFeedForward,
+            feedforward.calculate(desiredState.speedMetersPerSecond));
+            */
+        }
 
         /* Angle */
         // Prevent rotating module if speed is less then 1%. Prevents Jittering.
-        double angle = (Math.abs(desiredState.speedMetersPerSecond) <= (maxSpeed * 0.01))
-                ? lastAngle
-                : desiredState.angle.getDegrees();
+        double angle =
+                (Math.abs(desiredState.speedMetersPerSecond) <= (maxSpeed * 0.01))
+                        ? lastAngle
+                        : desiredState.angle.getDegrees();
         angleMotor.set(ControlMode.Position, Conversions.degreesToFalcon(angle, angleGearRatio));
         lastAngle = angle;
     }
 
     private void resetToAbsolute() {
-        double absolutePosition = Conversions.degreesToFalcon(
-                getCANCoderAbsRotation().getDegrees() - angleOffset, angleGearRatio);
+        double absolutePosition =
+                Conversions.degreesToFalcon(
+                        getCANCoderAbsRotation().getDegrees() - angleOffset, angleGearRatio);
         angleMotor.setSelectedSensorPosition(absolutePosition);
 
         angleEncoder.setStatusFramePeriod(
@@ -173,26 +175,35 @@ public class SwerveModule extends SubsystemBase {
     }
 
     @Override
-    public void periodic() {
-    }
+    public void periodic() {}
 
     @Override
     public void simulationPeriodic() {
         sim_angleMotorSim.setBusVoltage(RobotController.getBatteryVoltage());
         sim_driveMotorSim.setBusVoltage(RobotController.getBatteryVoltage());
 
-        sim_angleModModel.setInputVoltage(
-                sim_angleMotorSim.getMotorOutputLeadVoltage());
-        sim_driveModModel.setInputVoltage(
-                sim_driveMotorSim.getMotorOutputLeadVoltage());
+        sim_angleModModel.setInputVoltage(sim_angleMotorSim.getMotorOutputLeadVoltage());
+        sim_driveModModel.setInputVoltage(sim_driveMotorSim.getMotorOutputLeadVoltage());
 
         sim_angleModModel.update(0.02);
         sim_driveModModel.update(0.02);
 
-        sim_angleMotorSim.addIntegratedSensorPosition((int) Conversions.RPMToFalcon(sim_angleModModel.getAngularVelocityRPM() * .02, angleGearRatio));
-        sim_driveMotorSim.addIntegratedSensorPosition((int) Conversions.RPMToFalcon(sim_driveModModel.getAngularVelocityRPM() * .02, driveGearRatio));
-        sim_angleMotorSim.setIntegratedSensorVelocity((int) Conversions.RPMToFalcon(sim_angleModModel.getAngularVelocityRPM(), angleGearRatio));
-        sim_driveMotorSim.setIntegratedSensorVelocity((int) Conversions.RPMToFalcon(sim_driveModModel.getAngularVelocityRPM(), driveGearRatio));
+        sim_angleMotorSim.addIntegratedSensorPosition(
+                (int)
+                        Conversions.RPMToFalcon(
+                                sim_angleModModel.getAngularVelocityRPM() * .02, angleGearRatio));
+        sim_driveMotorSim.addIntegratedSensorPosition(
+                (int)
+                        Conversions.RPMToFalcon(
+                                sim_driveModModel.getAngularVelocityRPM() * .02, driveGearRatio));
+        sim_angleMotorSim.setIntegratedSensorVelocity(
+                (int)
+                        Conversions.RPMToFalcon(
+                                sim_angleModModel.getAngularVelocityRPM(), angleGearRatio));
+        sim_driveMotorSim.setIntegratedSensorVelocity(
+                (int)
+                        Conversions.RPMToFalcon(
+                                sim_driveModModel.getAngularVelocityRPM(), driveGearRatio));
 
         System.out.println("mod " + moduleNumber + ": - " + Timer.getFPGATimestamp());
         System.out.println(getState().toString());

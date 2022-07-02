@@ -6,11 +6,11 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.lib.util.JoystickSupplier;
 import frc.robot.commands.TeleopSwerve;
 import frc.robot.commands.TeleopSwerve.RotationStyle;
 import frc.robot.subsystems.swerve.Swerve;
-import tigerlib.input.controller.XboxController;
+import io.github.tigerbotics7125.tigerlib.input.oi.XboxController;
+import io.github.tigerbotics7125.tigerlib.util.CleanSupplier;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -35,10 +35,10 @@ public class RobotContainer {
         boolean openLoop = true;
         RotationStyle rotationStyle = RotationStyle.ROTATE;
         // left joystick is translation, right joystick is rotation
-        JoystickSupplier translationNorth = () -> driver.leftY().getVal();
-        JoystickSupplier translationEast = () -> driver.leftX().getVal();
-        JoystickSupplier rotationNorth = () -> driver.rightY().getVal();
-        JoystickSupplier rotationEast = () -> driver.rightX().getVal();
+        CleanSupplier<Double> translationNorth = driver.leftY().getCleanValue();
+        CleanSupplier<Double> translationEast = driver.leftX().getCleanValue();
+        CleanSupplier<Double> rotationNorth = driver.rightY().getCleanValue();
+        CleanSupplier<Double> rotationEast = driver.rightX().getCleanValue();
         s_Swerve.setDefaultCommand(
                 new TeleopSwerve(
                         s_Swerve,
